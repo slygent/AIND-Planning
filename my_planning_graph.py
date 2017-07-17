@@ -314,16 +314,14 @@ class PlanningGraph():
         alevel = set()
         for action in self.all_actions:
             pgnodea = PgNode_a(action)
-            for presnode in pgnodea.prenodes:
-                if presnode not in self.s_levels[level]:
-                    break
-                else:
+            for presnode in self.s_levels[level]:
+                if presnode in pgnodea.prenodes:
                     pgnodea.parents.add(presnode)
-            else:
-                alevel.add(pgnodea)
+                    presnode.children.add(pgnodea)
+                    alevel.add(pgnodea)
 
         self.a_levels.append(alevel)
-        return alevel
+
 
     def add_literal_level(self, level):
         """ add an S (literal) level to the Planning Graph
@@ -342,17 +340,15 @@ class PlanningGraph():
         #   all of the new S nodes as children of all the A nodes that could produce them, and likewise add the A nodes to the
         #   parent sets of the S nodes
 
-        alevel = self.a_levels[level - 1]
         slevel = set()
-        for pgnodea in alevel:
+        for pgnodea in self.a_levels[level - 1]:
             for effnode in pgnodea.effnodes:
-                if effnode in slevel:
-                    effnode.parents.add(pgnodea)
-                else:
-                    slevel.add(effnode)
+                effnode.parents.add(pgnodea)
+                slevel.add(effnode)
+                pgnodea.children.add(effnode)
 
         self.s_levels.append(slevel)
-        return slevel
+
 
     def update_a_mutex(self, nodeset):
         """ Determine and update sibling mutual exclusion for A-level nodes
@@ -480,9 +476,7 @@ class PlanningGraph():
         :param node_s2: PgNode_s
         :return: bool
         """
-        if node_s1.symbol == node_s2.symbol and node_s1.is_pos != node_s2.is_pos:
-            return True
-        else: return False
+        return (node_s1.symbol == node_s2.symbol and node_s1.is_pos != node_s2.is_pos)
 
     def inconsistent_support_mutex(self, node_s1: PgNode_s, node_s2: PgNode_s):
         """
@@ -500,9 +494,9 @@ class PlanningGraph():
         :param node_s2: PgNode_s
         :return: bool
         """
-        for a1_action in node_s1.parents:
-            for a2_action in node_s2.parents:
-                if not a1_action.is_mutex(a2_action): # if not mutex, then actions could achieve both literals
+        for pre1 in node_s1.parents:
+            for pre2 in node_s2.parents:
+                if not pre1.is_mutex(pre2): # if not mutex, then actions could achieve both literals
                     return False
         return True
 
@@ -515,13 +509,8 @@ class PlanningGraph():
 
         # for each goal in the problem, determine the level cost, then add them together
         for goal in self.problem.goal:
-            found_goal = False
-            for i, level in enumerate(self.s_levels):
-                for node in level:
-                    if node.is_pos and goal == node.symbol:
-                        level_sum += i
-                        found_goal = True
-                        break
-                if found_goal:
+            for level, snode in enumerate(self.s_levels):
+                if PgNode_s(goal, True) in snode:
+                    level_sum += level
                     break
         return level_sum
