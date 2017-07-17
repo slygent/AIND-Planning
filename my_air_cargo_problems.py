@@ -62,16 +62,16 @@ class AirCargoProblem(Problem):
             for cargo in self.cargos:
                 for plane in self.planes:
                     for airport in self.airports:
-                        precond_pos = [expr("In({}, {})".format(cargo, plane)),
+                        precond_pos = [expr("At({}, {})".format(cargo, airport)),
                                        expr("At({}, {})".format(plane, airport))
                                        ]
                         precond_neg = []
-                        effect_add = [expr("At({}, {})".format(cargo, airport))]
-                        effect_rem = [expr("In({}, {})".format(cargo, plane))]
-                        fly = Action(expr("Unload({}, {}, {})".format(cargo, plane, airport)),
+                        effect_add = [expr("In({}, {})".format(cargo, plane))]
+                        effect_rem = [expr("At({}, {})".format(cargo, airport))]
+                        load = Action(expr("Load({}, {}, {})".format(cargo, plane, airport)),
                                      [precond_pos, precond_neg],
                                      [effect_add, effect_rem])
-                        loads.append(fly)
+                        loads.append(load)
             return loads
 
         def unload_actions():
@@ -83,16 +83,16 @@ class AirCargoProblem(Problem):
             for cargo in self.cargos:
                 for plane in self.planes:
                     for airport in self.airports:
-                        precond_pos = [expr("At({}, {})".format(cargo, airport)),
+                       precond_pos = [expr("In({}, {})".format(cargo, plane)),
                                        expr("At({}, {})".format(plane, airport))
                                        ]
-                        precond_neg = []
-                        effect_add = [expr("In({}, {})".format(cargo, plane))]
-                        effect_rem = [expr("At({}, {})".format(cargo, airport))]
-                        fly = Action(expr("Load({}, {}, {})".format(cargo, plane, airport)),
+                       precond_neg = []
+                       effect_add = [expr("At({}, {})".format(cargo, airport))]
+                       effect_rem = [expr("In({}, {})".format(cargo, plane))]
+                       unload = Action(expr("Unload({}, {}, {})".format(cargo, plane, airport)),
                                      [precond_pos, precond_neg],
                                      [effect_add, effect_rem])
-                        unloads.append(fly)
+                       unloads.append(unload)
             return unloads
 
         def fly_actions():
@@ -126,23 +126,16 @@ class AirCargoProblem(Problem):
         :return: list of Action objects
         """
 
-        possible_actions = []
+        actions = []
 
         kb = PropKB()
-        kb.tell(decode_state(state, self.state_map).pos_sentence())
+        kb.tell(decode_state(state, self.state_map).pos_sentence())  # decode string
 
         for action in self.actions_list:
-            possible = True
-            for clause in action.precond_pos:
-                if clause not in kb.clauses:
-                    possible = False
-            for clause in action.precond_neg:
-                if clause in kb.clauses:
-                    possible = False
-            if possible:
-                possible_actions.append(action)
+            if all([posclause in kb.clauses for posclause in action.precond_pos] + [negclause in kb.clauses for negclause in action.precond_neg]):  # if state matches preconditions of action, then action is possible
+                actions.append(action)
 
-        return possible_actions
+        return actions
 
     def result(self, state: str, action: Action):
         """ Return the state that results from executing the given
@@ -154,25 +147,24 @@ class AirCargoProblem(Problem):
         :return: resulting state after action
         """
 
-        new_state = FluentState([], [])
+        newstate = FluentState([], [])
 
-        previous_state = decode_state(state, self.state_map)
+        prevstate = decode_state(state, self.state_map)  # decode state string
 
-        for fluent in previous_state.neg:
-            if fluent not in action.effect_add:
-                new_state.neg.append(fluent)
         for fluent in action.effect_rem:
-            if fluent not in new_state.neg:
-                new_state.neg.append(fluent)
-
-        for fluent in previous_state.pos:
-            if fluent not in action.effect_rem:
-                new_state.pos.append(fluent)
+            if fluent not in newstate.neg:
+                newstate.neg.append(fluent)  # switch to negative
         for fluent in action.effect_add:
-            if fluent not in new_state.pos:
-                new_state.pos.append(fluent)
+            if fluent not in newstate.pos:
+                newstate.pos.append(fluent)  # switch to positive
+        for fluent in prevstate.neg:
+            if fluent not in action.effect_add:
+                newstate.neg.append(fluent)  # keep the same
+        for fluent in prevstate.pos:
+            if fluent not in action.effect_rem:
+                newstate.pos.append(fluent)  # keep the same
 
-        return encode_state(new_state, self.state_map)
+        return encode_state(newstate, self.state_map) # encode back to string
 
     def goal_test(self, state: str) -> bool:
         """ Test the state to see if goal is reached
@@ -182,10 +174,8 @@ class AirCargoProblem(Problem):
         """
         kb = PropKB()
         kb.tell(decode_state(state, self.state_map).pos_sentence())
-        for clause in self.goal:
-            if clause not in kb.clauses:
-                return False
-        return True
+
+        return any(goalclause in kb.clauses for goalclause in self.goal)
 
     def h_1(self, node: Node):
         # note that this is not a true heuristic
@@ -212,15 +202,9 @@ class AirCargoProblem(Problem):
         executed.
         """
 
-        count = 0
+        exps = decode_state(node.state, self.state_map).pos  # positive expressions
 
-        exps = decode_state(node.state, self.state_map).pos
-
-        for subgoal in self.goal:
-            if subgoal not in exps:
-                count += 1
-
-        return count
+        return sum([1 for goalclause in self.goal if goalclause not in exps])  # number of goal clauses not in exps
 
 
 def air_cargo_p1() -> AirCargoProblem:
