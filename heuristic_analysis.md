@@ -16,18 +16,18 @@ The optimal solution is clearly to load the cargo in each airport, fly to the ot
 ### Non-heuristic search results ###
 
 | Search              | Optimality | Time elapsed | Node expansions |
-|---------------------|------------|--------------|-----------------|
-| Breadth-first       |       1    |     0.042    |       43        |
+|--------------------:|-----------:|-------------:|----------------:|
+| Breadth-first       |       1.00    |     0.042    |       43        |
 | Depth-first         |    0.25    |     0.027    |       33        |
-| Uniform cost search |       1    |     0.045    |       55        |
+| Uniform cost search |       1.00    |     0.045    |       55        |
 
 Depth-first was the fastest search, but only found a solution of length 24, while breadth-first and uniform cost searches found the optimal solution of length 6, breadth-first slightly more efficiently.
 
 ### Heuristic search results ###
 
-|  A*-search heuristic | Optimality | Time elapsed | Node expansions |
-|---------------------:|:----------:|:------------:|:---------------:|
-|             Constant |          1 |         0.04 |              55 |
+|  A star-search heuristic | Optimality | Time elapsed | Node expansions |
+|--------------------:|-----------:|-------------:|----------------:|
+|       Constant |          1 |         0.04 |              55 |
 | Ignore preconditions |          1 |         0.03 |              41 |
 |            Level sum |          1 |         0.09 |              39 |
 
@@ -52,7 +52,7 @@ The optimal solution is again to load the cargo in each airport, fly to the requ
 ### Non-heuristic search results ###
 
 |              Search | Optimality | Time elapsed | Node expansions |
-|--------------------:|:----------:|:------------:|:---------------:|
+|--------------------:|-----------:|-------------:|----------------:|
 |       Breadth-first |          1 |        20.19 |            3343 |
 |         Depth-first |      0.015 |         4.94 |             603 |
 | Uniform cost search |          1 |        16.16 |            4762 |
@@ -61,8 +61,9 @@ Depth-first was most efficient again, but only found a solution of path 599 inst
 
 ### Heuristic search results ###
 
-|  A*-search heuristic | Optimality | Time elapsed | Node expansions |
-|---------------------:|:----------:|:------------:|:---------------:|
+
+|  A star-search heuristic | Optimality | Time elapsed | Node expansions |
+|--------------------:|-----------:|-------------:|----------------:|
 |             Constant |          1 |        14.76 |            4762 |
 | Ignore preconditions |          1 |         4.99 |            1459 |
 |            Level sum |          1 |       333.03 |            1129 |
@@ -91,7 +92,7 @@ The optimal solution is now for each plane to load at its original airport, fly 
 ### Non-heuristic search results ###
 
 |              Search | Optimality | Time elapsed | Node expansions |
-|--------------------:|:----------:|:------------:|:---------------:|
+|--------------------:|-----------:|-------------:|----------------:|
 |       Breadth-first |          1 |       151.22 |           14729 |
 |         Depth-first |      0.002 |       200.29 |            7202 |
 | Uniform cost search |          1 |        62.28 |           17851 |
@@ -100,8 +101,8 @@ Yet again, depth-first finds a highly non-optimal solution, with a plan length o
 
 ### Heuristic search results ###
 
-|  A*-search heuristic | Optimality | Time elapsed | Node expansions |
-|---------------------:|:----------:|:------------:|:---------------:|
+|  A star-search heuristic | Optimality | Time elapsed | Node expansions |
+|--------------------:|-----------:|-------------:|----------------:|
 |             Constant |          1 |        65.55 |           17851 |
 | Ignore preconditions |          1 |        19.43 |            5012 |
 |            Level sum |          1 |      1181.74 |            2024 |
