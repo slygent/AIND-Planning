@@ -175,7 +175,7 @@ class AirCargoProblem(Problem):
         kb = PropKB()
         kb.tell(decode_state(state, self.state_map).pos_sentence())
 
-        return any(goalclause in kb.clauses for goalclause in self.goal)
+        return all(goalclause in kb.clauses for goalclause in self.goal)
 
     def h_1(self, node: Node):
         # note that this is not a true heuristic
